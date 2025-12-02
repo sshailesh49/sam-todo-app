@@ -1,0 +1,41 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install SAM CLI
+        run: pip install aws-sam-cli
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: SAM Build
+        run: sam build --use-container
+
+      - name: SAM Deploy to Production
+        run: |
+          sam deploy             --stack-name sam-todo-prod             --no-confirm-changeset             --no-fail-on-empty-changeset
